@@ -338,6 +338,8 @@ std::ostream & PerformanceReport::print_csv_header_(
     << ",Flops"
     << ",Flops/Byte"
     << ",Runtime"
+    << ",Energy"
+    << ",Power"
     << ",GB/s"
     << ",GFLOPs"
     ;
@@ -374,7 +376,9 @@ std::ostream & PerformanceReport::print_result_csv_(
     << "," << result.bytes
     << "," << result.flops
     << "," << result.flops / result.bytes
-    << "," << result.runtime;
+    << "," << result.runtime
+    << "," << result.energy
+    << "," << result.power();
 
   if (result.good()) {
 

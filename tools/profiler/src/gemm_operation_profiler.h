@@ -248,6 +248,7 @@ protected:
   /// Method to profile a CUTLASS Operation
   Status profile_cutlass_(
     double &runtime,
+    unsigned long long &energy,
     Options const &options,
     library::Operation const *operation,
     void *arguments,

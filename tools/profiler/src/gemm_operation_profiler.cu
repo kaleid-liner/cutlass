@@ -1051,6 +1051,7 @@ bool GemmOperationProfiler::profile(
 
     results_.back().status = profile_cutlass_(
       results_.back().runtime,
+      results_.back().energy,
       options,
       operation,
       &gemm_workspace_.arguments,
@@ -1066,6 +1067,7 @@ bool GemmOperationProfiler::profile(
 /// Method to profile a CUTLASS Operation
 Status GemmOperationProfiler::profile_cutlass_(
   double &runtime,
+  unsigned long long &energy,
   Options const &options,
   library::Operation const *operation,
   void *arguments,
@@ -1200,6 +1202,7 @@ Status GemmOperationProfiler::profile_cutlass_(
   //
 
   runtime = timer.duration(iteration);
+  energy = timer.end_energy - timer.start_energy;
 
   return status;
 }

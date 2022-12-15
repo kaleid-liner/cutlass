@@ -35,6 +35,7 @@
 #pragma once
 
 #include <cuda_runtime.h>
+#include <nvml.h>
 #include "cutlass/cutlass.h"
 
 namespace cutlass {
@@ -45,6 +46,10 @@ namespace profiler {
 struct GpuTimer {
 
   cudaEvent_t events[2];
+
+  unsigned long long start_energy, end_energy;
+
+  nvmlDevice_t device;
 
   //
   // Methods

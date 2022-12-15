@@ -85,6 +85,7 @@ target_link_libraries(
   cutlass_tools_util_includes
   $<$<BOOL:${CUTLASS_ENABLE_CUBLAS}>:nvidia::cublas>
   $<$<BOOL:${CUTLASS_ENABLE_CUDNN}>:nvidia::cudnn>
+  nvidia-ml
   cudart
   )
 

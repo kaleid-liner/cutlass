@@ -86,6 +86,8 @@ struct PerformanceResult {
   /// Average runtime in ms
   double runtime;
 
+  unsigned long long energy;
+
   //
   // Members
   //
@@ -99,7 +101,8 @@ struct PerformanceResult {
     status(Status::kInvalid),
     bytes(0), 
     flops(0), 
-    runtime(0)
+    runtime(0),
+    energy(0)
   { }
 
   /// Returns true if the runtime is valid
@@ -115,6 +118,10 @@ struct PerformanceResult {
   /// memory bandwidth in units of GiB/s
   double gbytes_per_sec() const {
     return double(bytes) / double(1 << 30) / runtime * 1000.0;
+  }
+
+  double power() const {
+    return double(energy) / runtime / 10000.0;
   }
 
 };

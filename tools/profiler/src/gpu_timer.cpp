@@ -33,6 +33,8 @@
 */
 
 #include <stdexcept>
+#include <nvml.h>
+#include <iostream>
 
 #include "gpu_timer.h"
 
@@ -43,6 +45,7 @@ namespace profiler {
 
 GpuTimer::GpuTimer() {
   cudaError_t result;
+  nvmlInit();
 
   for (auto & event : events) {
     result = cudaEventCreate(&event);
@@ -50,6 +53,8 @@ GpuTimer::GpuTimer() {
       throw std::runtime_error("Failed to create CUDA event");
     }
   }
+
+  nvmlDeviceGetHandleByIndex(1, &device);
 }
 
 GpuTimer::~GpuTimer() {
@@ -60,6 +65,7 @@ GpuTimer::~GpuTimer() {
 
 /// Records a start event in the stream
 void GpuTimer::start(cudaStream_t stream) {
+  nvmlDeviceGetTotalEnergyConsumption(device, &start_energy);
   cudaError_t result = cudaEventRecord(events[0], stream);
   if (result != cudaSuccess) {
     throw std::runtime_error("Failed to record start event.");
@@ -92,6 +98,9 @@ void GpuTimer::stop_and_wait(cudaStream_t stream) {
       throw std::runtime_error("Failed to synchronize with CUDA device.");
     }
   }
+
+  nvmlDeviceGetTotalEnergyConsumption(device, &end_energy);
+  std::cout << end_energy - start_energy;
 }
 
 /// Returns the duration in miliseconds

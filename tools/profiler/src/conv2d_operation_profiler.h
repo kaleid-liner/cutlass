@@ -426,6 +426,7 @@ protected:
   /// Method to profile an initialized CUTLASS operation
   virtual Status profile_cutlass_(
     double &runtime,
+    unsigned long long &energy,
     Options const &options,
     library::Operation const *operation,
     void *arguments,
