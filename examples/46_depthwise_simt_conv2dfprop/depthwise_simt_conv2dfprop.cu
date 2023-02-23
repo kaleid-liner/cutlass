@@ -57,6 +57,8 @@ convolution kernel.
 #include <fstream>
 #include <sstream>
 
+#include <nvml.h>
+
 #include "cutlass/cutlass.h"
 #include "cutlass/gemm/device/gemm.h"
 #include "cutlass/conv/kernel/default_depthwise_fprop.h"
@@ -355,20 +357,22 @@ struct Result {
   cutlass::Status status;
   cutlass::Status reference_check;
   cudaError_t error;
+  double energy;
 
   Result()
       : runtime_ms(0),
         gflops(0),
         status(cutlass::Status::kSuccess),
         reference_check(cutlass::Status::kInvalid),
-        error(cudaSuccess) {}
+        error(cudaSuccess),
+        energy(0) {}
 
   static std::ostream &print_header(std::ostream &out, Options const &options) {
     if (!options.tag.empty()) {
       out << "Name,";
     }
 
-    out << "Layer,N,H,W,C,K,R,S,G,stride_h,stride_w,dilation_h,dilation_w,splitK,Runtime,GFLOPs";
+    out << "Layer,N,H,W,C,K,R,S,G,stride_h,stride_w,dilation_h,dilation_w,splitK,Runtime,GFLOPs,Energy,Power,N Blocks";
 
     return out;
   }
@@ -392,7 +396,11 @@ struct Result {
 
         << options.splitk << ","
 
-        << runtime_ms << "," << gflops;
+        << runtime_ms << "," << gflops << ","
+
+        << energy << "," << energy / runtime_ms << ","
+
+        << options.input_size.c() / groups_per_cta;
 
     return out;
   }
@@ -402,6 +410,11 @@ struct Result {
 
 /// Runs one testcase
 Result profile_convolution(Options const &options) {
+  nvmlInit();
+  nvmlDevice_t device;
+  nvmlDeviceGetHandleByIndex(1, &device);
+  unsigned long long start_energy, end_energy;
+
   Result result;
 
   //
@@ -582,6 +595,7 @@ Result profile_convolution(Options const &options) {
 
     // Record an event at the start of a series of convolution operations.
     result.error = cudaEventRecord(events[0]);
+    nvmlDeviceGetTotalEnergyConsumption(device, &start_energy);
     if (result.error != cudaSuccess) {
       std::cerr << "cudaEventRecord() failed: " << cudaGetErrorString(result.error) << std::endl;
       return result;
@@ -602,6 +616,7 @@ Result profile_convolution(Options const &options) {
 
     // Wait for work on the device to complete.
     result.error = cudaEventSynchronize(events[1]);
+    nvmlDeviceGetTotalEnergyConsumption(device, &end_energy);
     if (result.error != cudaSuccess) {
       std::cerr << "cudaEventSynchronize() failed: " << cudaGetErrorString(result.error)
                 << std::endl;
@@ -619,6 +634,7 @@ Result profile_convolution(Options const &options) {
     // Print average runtime and GFLOPs.
     result.runtime_ms = double(runtime_ms) / double(options.iterations);
     result.gflops = options.gflops(result.runtime_ms / 1000.0);
+    result.energy = double(end_energy - start_energy) / double(options.iterations);
 
     // Cleanup
     for (auto event : events) {
@@ -634,8 +650,9 @@ Result profile_convolution(Options const &options) {
 int main(int argc, char const **args) {
   bool notSupported = false;
 
+  cudaSetDevice(1);
   cudaDeviceProp props;
-  CUDA_CHECK(cudaGetDeviceProperties(&props, 0));
+  CUDA_CHECK(cudaGetDeviceProperties(&props, 1));
 
   if (!(props.major >= 6)) {
     std::cerr << "Run on a machine with compute capability at least 60." << std::endl;

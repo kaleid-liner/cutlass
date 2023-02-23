@@ -51,6 +51,7 @@ function(cutlass_example_add_executable NAME)
   target_link_libraries(
     ${NAME}
     PRIVATE
+    nvidia-ml
     CUTLASS
     cutlass_tools_util_includes
     $<$<BOOL:${CUTLASS_ENABLE_CUBLAS}>:nvidia::cublas>

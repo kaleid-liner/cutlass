@@ -701,16 +701,22 @@ def GenerateSM50_Simt(manifest, cuda_version):
 
   for math_inst in math_instructions:
     tile_descriptions = [
-      TileDescription([128, 256, 8], 2, [4, 4, 1], math_inst, min_cc, max_cc),
-      TileDescription([256, 128, 8], 2, [4, 4, 1], math_inst, min_cc, max_cc),
-      TileDescription([128, 128, 8], 2, [4, 2, 1], math_inst, min_cc, max_cc),
-      TileDescription([128,  64, 8], 2, [2, 2, 1], math_inst, min_cc, max_cc),
-      TileDescription([ 64, 128, 8], 2, [2, 2, 1], math_inst, min_cc, max_cc),
-      TileDescription([ 64,  64, 8], 2, [2, 1, 1], math_inst, min_cc, max_cc),
-      TileDescription([128,  32, 8], 2, [2, 1, 1], math_inst, min_cc, max_cc),
-      TileDescription([ 32, 128, 8], 2, [1, 2, 1], math_inst, min_cc, max_cc),
-      TileDescription([ 32, 64, 8], 2, [1, 1, 1], math_inst, min_cc, max_cc),
-      TileDescription([ 64, 32, 8], 2, [1, 1, 1], math_inst, min_cc, max_cc),
+      #TileDescription([128, 256, 8], 2, [4, 8, 1], math_inst, min_cc, max_cc),
+      #TileDescription([256, 128, 8], 2, [4, 4, 1], math_inst, min_cc, max_cc),
+      TileDescription([128, 128, 8], 2, [4, 4, 1], math_inst, min_cc, max_cc),
+      TileDescription([128,  64, 8], 2, [4, 2, 1], math_inst, min_cc, max_cc),
+      #TileDescription([128,  64, 8], 2, [2, 2, 1], math_inst, min_cc, max_cc),
+      #TileDescription([128,  64, 8], 2, [4, 2, 1], math_inst, min_cc, max_cc),
+      #TileDescription([ 64, 128, 8], 2, [1, 2, 1], math_inst, min_cc, max_cc),
+      #TileDescription([ 64, 128, 8], 2, [2, 2, 1], math_inst, min_cc, max_cc),
+      TileDescription([ 64, 128, 8], 2, [2, 4, 1], math_inst, min_cc, max_cc),
+      #TileDescription([ 64,  64, 8], 2, [1, 1, 1], math_inst, min_cc, max_cc),
+      #TileDescription([ 64,  64, 8], 2, [2, 1, 1], math_inst, min_cc, max_cc),
+      TileDescription([ 64,  64, 8], 2, [2, 2, 1], math_inst, min_cc, max_cc),
+      TileDescription([128,  32, 8], 2, [4, 1, 1], math_inst, min_cc, max_cc),
+      TileDescription([ 32, 128, 8], 2, [1, 4, 1], math_inst, min_cc, max_cc),
+      TileDescription([ 32, 64, 8], 2, [1, 2, 1], math_inst, min_cc, max_cc),
+      TileDescription([ 64, 32, 8], 2, [2, 1, 1], math_inst, min_cc, max_cc),
       #TileDescription([ 32, 32, 1], 2, [1, 1, 1], math_inst, min_cc, max_cc),
     ]
 
@@ -2839,7 +2845,7 @@ def GenerateSM80_TensorOp_1688_rank_k(manifest, cuda_version):
   for math_inst in math_instructions:
     tile_descriptions = [
       TileDescription([256, 128, 16],  3, [4, 2, 1], math_inst, min_cc, max_cc),
-      TileDescription([128, 256, 16],  3, [2, 4, 1], math_inst, min_cc, max_cc),
+      #TileDescription([128, 256, 16],  3, [2, 4, 1], math_inst, min_cc, max_cc),
       #TileDescription([256,  64, 16],  4, [4, 1, 1], math_inst, min_cc, max_cc),
       #TileDescription([ 64, 256, 16],  4, [1, 4, 1], math_inst, min_cc, max_cc),
       TileDescription([128, 128, 16],  5, [2, 2, 1], math_inst, min_cc, max_cc),
@@ -2847,7 +2853,7 @@ def GenerateSM80_TensorOp_1688_rank_k(manifest, cuda_version):
       #TileDescription([ 64, 128, 16],  6, [2, 2, 1], math_inst, min_cc, max_cc),
       #TileDescription([ 64,  64, 16], 10, [2, 2, 1], math_inst, min_cc, max_cc),
       TileDescription([256, 128, 32],  3, [4, 2, 1], math_inst, min_cc, max_cc),
-      TileDescription([128, 256, 32],  3, [2, 4, 1], math_inst, min_cc, max_cc),
+      #TileDescription([128, 256, 32],  3, [2, 4, 1], math_inst, min_cc, max_cc),
       #TileDescription([256,  64, 32],  4, [4, 1, 1], math_inst, min_cc, max_cc),
       #TileDescription([ 64, 256, 32],  4, [1, 4, 1], math_inst, min_cc, max_cc),
       TileDescription([128, 128, 32],  4, [2, 2, 1], math_inst, min_cc, max_cc),

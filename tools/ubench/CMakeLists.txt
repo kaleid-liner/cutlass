@@ -26,19 +26,37 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-add_subdirectory(util)
+#
+# Sources for CUTLASS Profiler Tool
+#
 
-if (CUTLASS_ENABLE_LIBRARY)
-  add_subdirectory(library)
-endif()
-if (CUTLASS_ENABLE_PROFILER)
-  if (NOT CUTLASS_ENABLE_LIBRARY)
-    message(SEND_ERROR "Build conflict: The CUTLASS profiler requires the CUTLASS library.")
-    message(SEND_ERROR "  CUTLASS_ENABLE_PROFILER = ${CUTLASS_ENABLE_PROFILER}")
-    message(SEND_ERROR "  CUTLASS_ENABLE_LIBRARY = ${CUTLASS_ENABLE_LIBRARY}")
-  else()
-    add_subdirectory(profiler)
-  endif()
-endif()
 
-add_subdirectory(ubench)
+#
+# Build target
+#
+
+add_subdirectory(cuda_energy_profiler)
+
+cutlass_add_executable(
+  ubench
+  FP_MAD.cu
+)
+add_executable(nvidia::cutlass::ubench ALIAS ubench)
+
+#
+# Library dependencies
+#
+
+target_link_libraries(
+  ubench
+  PRIVATE 
+  nvidia-ml
+  cudart
+  cuda_energy_profiler
+  )
+
+install(
+  TARGETS ubench
+  EXPORT NvidiaCutlass
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+  )
