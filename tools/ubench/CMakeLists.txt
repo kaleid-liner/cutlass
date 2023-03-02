@@ -35,7 +35,13 @@
 # Build target
 #
 
-add_subdirectory(cuda_energy_profiler)
+option(JETSON "Compile on jetson" ON)
+if(JETSON)
+  add_subdirectory(jetson_profiler)
+  add_compile_definitions(JETSON)
+else()
+  add_subdirectory(cuda_energy_profiler)
+endif(JETSON)
 
 cutlass_add_executable(
   ubench
@@ -47,16 +53,25 @@ add_executable(nvidia::cutlass::ubench ALIAS ubench)
 # Library dependencies
 #
 
-target_link_libraries(
-  ubench
-  PRIVATE 
-  nvidia-ml
-  cudart
-  cuda_energy_profiler
+if(JETSON)
+  target_link_libraries(
+    ubench
+    PRIVATE
+    cudart
+    jetson_profiler
   )
+else()
+  target_link_libraries(
+    ubench
+    PRIVATE 
+    nvidia-ml
+    cudart
+    cuda_energy_profiler
+  )
+endif(JETSON)
 
 install(
   TARGETS ubench
   EXPORT NvidiaCutlass
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-  )
+)

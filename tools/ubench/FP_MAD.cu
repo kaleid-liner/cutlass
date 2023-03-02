@@ -40,9 +40,13 @@
 // includes CUDA
 #include <cuda_runtime.h>
 
+#ifndef JETSON
 #include <nvml.h>
-
 #include "cuda_energy_profiler.h"
+#else
+#include "jetson_profiler.h"
+#endif
+
 
 using namespace onnxruntime::profiling;
 
@@ -149,6 +153,7 @@ int main(int argc, char **argv)
     repeats = atoi(argv[2]);
   }
 
+#ifndef JETSON
   cudaSetDevice(1);
   cudaDeviceProp props;
   checkCudaErrors(cudaGetDeviceProperties(&props, 1));
@@ -156,19 +161,22 @@ int main(int argc, char **argv)
   nvmlDevice_t device;
   nvmlDeviceGetHandleByIndex(1, &device);
   unsigned long long start_energy, end_energy;
-  // GPUInspector::Initialize();
-  // GPUInspector::Reset({1}, 0.02);
+#else
+  onnxruntime::profiling::JetsonProfiler profiler;
+#endif
 
   printf("Blocks,Elements per thread,CGMA,Threads per block,Latency,Energy,Power\n");
   for (unsigned cgma = 1000; cgma <= 1000; cgma += 10) {
-  for (unsigned blocks = 24; blocks <= 256; blocks += 1) {
+  // for (unsigned blocks = 24; blocks <= 256; blocks += 1) {
   // for (unsigned elements = 10; elements <= 10; elements += 1) {
-  for (unsigned threads_per_block = 512; threads_per_block <= 512; threads_per_block += 32) {
-    unsigned total_elements = 480;
-    unsigned elements = total_elements / blocks;
-    if (blocks != total_elements / elements) {
-      continue;
-    }
+  for (unsigned threads_per_block = 32; threads_per_block <= 512; threads_per_block += 32) {
+    unsigned total_elements = 2048;
+    // unsigned elements = total_elements / blocks;
+    unsigned elements = 20;
+    unsigned blocks = total_elements / threads_per_block;
+    // if (blocks != total_elements / elements) {
+    //   continue;
+    // }
     unsigned threads_per_block_after_fix = threads_per_block;
     // if (elements <= 200) {
     //   threads_per_block_after_fix = elements * threads_per_block / 200;
@@ -218,7 +226,11 @@ int main(int argc, char **argv)
     cudaDeviceSynchronize();
 
     checkCudaErrors(cudaEventRecord(start));
+#ifndef JETSON
     nvmlDeviceGetTotalEnergyConsumption(device, &start_energy);
+#else
+    profiler.start();
+#endif
     // GPUInspector::StartInspect();
     for (unsigned i = 0; i < repeats; i++) {
       PowerKernal2<<<dimGrid, dimBlock>>>(d_A, d_B, d_C, cgma, elements);
@@ -226,14 +238,18 @@ int main(int argc, char **argv)
     checkCudaErrors(cudaEventRecord(stop));
 
     checkCudaErrors(cudaEventSynchronize(stop));
+#ifndef JETSON
     nvmlDeviceGetTotalEnergyConsumption(device, &end_energy);
-    // GPUInspector::StopInspect();
-    checkCudaErrors(cudaEventElapsedTime(&elapsedTime, start, stop));
-
     unsigned long long energy = end_energy - start_energy;
-    //double energy = GPUInspector::CalculateEnergy(1);
-    float power = energy / (float)elapsedTime;
-    printf("%d,%d,%d,%d,%.6f,%.6f,%.2f\n", blocks, elements, cgma, threads_per_block_after_fix, elapsedTime / repeats, (float)energy / repeats, power);
+    double energy = end_energy - start_energy;
+#else
+    profiler.end();
+    double energy = (double)profiler.get_gpu_energy() / 1000000;
+#endif
+  
+    checkCudaErrors(cudaEventElapsedTime(&elapsedTime, start, stop));
+    double power = energy / elapsedTime;
+    printf("%d,%d,%d,%d,%.6f,%.6f,%.2f\n", blocks, elements, cgma, threads_per_block_after_fix, elapsedTime / repeats, energy / repeats, power);
 
     getLastCudaError("kernel launch failure");
     cudaThreadSynchronize();
@@ -244,7 +260,7 @@ int main(int argc, char **argv)
     CleanupResources();
   } // threads_per_block
   // } // elements
-  } // blocks
+  // } // blocks
   } // cgma
 
   return 0;
