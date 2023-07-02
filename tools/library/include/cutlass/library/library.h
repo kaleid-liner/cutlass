@@ -136,6 +136,8 @@ enum class NumericTypeID {
   kCU16,
   kCU32,
   kCU64,
+  kFP4,
+  kNF4,
   kInvalid
 };
 

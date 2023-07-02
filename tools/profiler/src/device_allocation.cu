@@ -669,6 +669,22 @@ void DeviceAllocation::initialize_random_device(int seed, Distribution dist) {
       dist
     );
     break;
+  case library::NumericTypeID::kFP4:
+    cutlass::reference::device::BlockFillRandom<fp4_t>(
+      reinterpret_cast<fp4_t *>(pointer_),
+      capacity_,
+      seed,
+      dist
+    );
+    break;
+  case library::NumericTypeID::kNF4:
+    cutlass::reference::device::BlockFillRandom<nf4_t>(
+      reinterpret_cast<nf4_t *>(pointer_),
+      capacity_,
+      seed,
+      dist
+    );
+    break;
   default: break;
   }
 }
@@ -1079,6 +1095,18 @@ bool DeviceAllocation::block_compare_equal(
       reinterpret_cast<uint64_t const *>(ptr_A), 
       reinterpret_cast<uint64_t const *>(ptr_B), 
       capacity);
+  
+  case library::NumericTypeID::kFP4:
+    return reference::device::BlockCompareEqual<fp4_t>(
+      reinterpret_cast<fp4_t const *>(ptr_A), 
+      reinterpret_cast<fp4_t const *>(ptr_B), 
+      capacity);
+
+  case library::NumericTypeID::kNF4:
+    return reference::device::BlockCompareEqual<nf4_t>(
+      reinterpret_cast<nf4_t const *>(ptr_A), 
+      reinterpret_cast<nf4_t const *>(ptr_B), 
+      capacity);
 
   default:
     throw std::runtime_error("Unsupported numeric type");
@@ -1238,6 +1266,22 @@ bool DeviceAllocation::block_compare_relatively_equal(
       capacity, 
       static_cast<uint64_t>(epsilon), 
       static_cast<uint64_t>(nonzero_floor));
+
+  case library::NumericTypeID::kFP4:
+    return reference::device::BlockCompareRelativelyEqual<fp4_t>(
+      reinterpret_cast<fp4_t const *>(ptr_A), 
+      reinterpret_cast<fp4_t const *>(ptr_B),
+      capacity, 
+      static_cast<fp4_t>(epsilon), 
+      static_cast<fp4_t>(nonzero_floor));
+
+  case library::NumericTypeID::kNF4:
+    return reference::device::BlockCompareRelativelyEqual<nf4_t>(
+      reinterpret_cast<nf4_t const *>(ptr_A), 
+      reinterpret_cast<nf4_t const *>(ptr_B),
+      capacity, 
+      static_cast<nf4_t>(epsilon), 
+      static_cast<nf4_t>(nonzero_floor));
 
   // No relatively equal comparison for complex numbers.
   //
@@ -1501,6 +1545,14 @@ void DeviceAllocation::write_tensor_csv(
   case library::NumericTypeID::kU64:
     write_tensor_csv_static_type<uint64_t>(out, *this);
     break;
+
+  case library::NumericTypeID::kFP4:
+    write_tensor_csv_static_type<fp4_t>(out, *this);
+    break;
+
+  case library::NumericTypeID::kNF4:
+    write_tensor_csv_static_type<nf4_t>(out, *this);
+    break;
   
   case library::NumericTypeID::kCF16:
     write_tensor_csv_static_type<cutlass::complex<half_t> >(out, *this);
@@ -1656,6 +1708,14 @@ void DeviceAllocation::fill(double val = 0.0) {
 
   case library::NumericTypeID::kU64:
     tensor_fill<uint64_t>(*this, static_cast<uint64_t>(val));
+    break;
+
+  case library::NumericTypeID::kFP4:
+    tensor_fill<fp4_t>(*this, static_cast<fp4_t>(val));
+    break;
+
+  case library::NumericTypeID::kNF4:
+    tensor_fill<nf4_t>(*this, static_cast<nf4_t>(val));
     break;
 
   case library::NumericTypeID::kCF16:
