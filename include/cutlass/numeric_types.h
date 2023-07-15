@@ -46,6 +46,12 @@ struct sizeof_bits {
   static int const value = int(sizeof(T) * 8);
 };
 
+template <typename T>
+size_t get_real_size(size_t size)
+{
+  return size * sizeof_bits<T>::value / sizeof_bits<char>;
+}
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 //

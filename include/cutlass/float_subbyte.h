@@ -106,16 +106,16 @@ T const quant_map<T, 4, true>::value[16] = {
 
 template <typename T, int Bits, bool Normal>
 CUTLASS_DEVICE
-T cuda_float_dequantize(uint8_t x)
+uint16_t cuda_float_dequantize(uint32_t x)
 {
-  return T(0.0f);
+  return 0;
 }
 
 template <>
 CUTLASS_DEVICE
-half_t cuda_float_dequantize<half_t, 4, false>(uint8_t x)
+uint16_t cuda_float_dequantize<half_t, 4, false>(uint32_t x)
 {
-  static __constant__ uint16_t cuda_quant_map[16] = {
+  static const uint16_t cuda_quant_map[16] = {
     0x0,
     0x1d55,
     0x3955,
@@ -133,14 +133,14 @@ half_t cuda_float_dequantize<half_t, 4, false>(uint8_t x)
     0xb155,
     0xb400
   };
-  return reinterpret_cast<half_t const*>(cuda_quant_map)[x];
+  return cuda_quant_map[x];
 }
 
 template <>
 CUTLASS_DEVICE
-bfloat16_t cuda_float_dequantize<bfloat16_t, 4, false>(uint8_t x)
+uint16_t cuda_float_dequantize<bfloat16_t, 4, false>(uint32_t x)
 {
-  static __constant__ uint16_t cuda_quant_map[16] = {
+  static const uint16_t cuda_quant_map[16] = {
     0x0,
     0x3bab,
     0x3f2b,
@@ -158,14 +158,14 @@ bfloat16_t cuda_float_dequantize<bfloat16_t, 4, false>(uint8_t x)
     0xbe2b,
     0xbe80
   };
-  return reinterpret_cast<bfloat16_t const*>(cuda_quant_map)[x];
+  return cuda_quant_map[x];
 }
 
 template <>
 CUTLASS_DEVICE
-half_t cuda_float_dequantize<half_t, 4, true>(uint8_t x)
+uint16_t cuda_float_dequantize<half_t, 4, true>(uint32_t x)
 {
-  static __constant__ uint16_t cuda_quant_map[16] = {
+  static const uint16_t cuda_quant_map[16] = {
     0xbc00,
     0xb992,
     0xb833,
@@ -183,14 +183,14 @@ half_t cuda_float_dequantize<half_t, 4, true>(uint8_t x)
     0x39c9,
     0x3c00
   };
-  return reinterpret_cast<half_t const*>(cuda_quant_map)[x];
+  return cuda_quant_map[x];
 }
 
 template <>
 CUTLASS_DEVICE
-bfloat16_t cuda_float_dequantize<bfloat16_t, 4, true>(uint8_t x)
+uint16_t cuda_float_dequantize<bfloat16_t, 4, true>(uint32_t x)
 {
-  static __constant__ uint16_t cuda_quant_map[16] = {
+  static const uint16_t cuda_quant_map[16] = {
     0xbf80,
     0xbf32,
     0xbf06,
@@ -208,7 +208,15 @@ bfloat16_t cuda_float_dequantize<bfloat16_t, 4, true>(uint8_t x)
     0x3f39,
     0x3f80
   };
-  return reinterpret_cast<bfloat16_t const*>(cuda_quant_map)[x];
+  return cuda_quant_map[x];
+}
+
+template <typename T, int Bits, bool Normal>
+CUTLASS_DEVICE
+T cuda_float_dequantize_t(uint32_t x)
+{
+  uint16_t ret_val = cuda_float_dequantize<T, Bits, Normal>(x);
+  return reinterpret_cast<T const&>(ret_val);
 }
 
 template <typename T, int Bits, bool Normal>
@@ -216,7 +224,7 @@ CUTLASS_HOST_DEVICE
 T float_dequantize(uint8_t x)
 {
 #if defined(__CUDA_ARCH__) && (__CUDA_ARCH__ >= 530)
-  return cuda_float_dequantize<T, Bits, Normal>(x);
+  return cuda_float_dequantize_t<T, Bits, Normal>(x);
 #else
   return quant_map<T, Bits, Normal>::value[x];
 #endif
