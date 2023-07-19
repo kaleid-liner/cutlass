@@ -49,7 +49,7 @@ struct sizeof_bits {
 template <typename T>
 size_t get_real_size(size_t size)
 {
-  return size * sizeof_bits<T>::value / sizeof_bits<char>;
+  return size * sizeof_bits<T>::value / sizeof_bits<char>::value;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
